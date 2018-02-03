@@ -1,0 +1,20 @@
+language: python
+cache: pip
+
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+
+services: mongodb
+
+install:
+  - pip3 install -r requirements.txt
+  - pip3 install coveralls
+
+script:
+  - coverage run --source=Server/app Server/run_test.py
+
+after_success:
+  - coverage report
+  - coveralls
