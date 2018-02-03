@@ -1,1 +1,1 @@
-# TableMaker-Backend
+# TableMaker-Backend [![Build Status](https://travis-ci.org/TblMaker/TableMaker-Backend.svg?branch=master)](https://travis-ci.org/TblMaker/TableMaker-Backend)
