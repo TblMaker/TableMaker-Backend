@@ -1,4 +1,4 @@
-# TableMaker-Backend [![Build Status](https://travis-ci.org/TblMaker/TableMaker-Backend.svg?branch=master)](https://travis-ci.org/TblMaker/TableMaker-Backend) [![Coverage Status](https://coveralls.io/repos/github/TblMaker/TableMaker-Backend/badge.svg?branch=develop)](https://coveralls.io/github/TblMaker/TableMaker-Backend?branch=develop)
+# TableMaker-Backend [![Build Status](https://travis-ci.org/TblMaker/TableMaker-Backend.svg?branch=master)](https://travis-ci.org/TblMaker/TableMaker-Backend) [![Coverage Status](https://coveralls.io/repos/github/TblMaker/TableMaker-Backend/badge.svg?branch=develop)](https://coveralls.io/github/TblMaker/TableMaker-Backend?branch=develop) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/TblMaker/TableMaker-Backend/badges/quality-score.png?b=develop)](https://scrutinizer-ci.com/g/TblMaker/TableMaker-Backend/?branch=develop)
 
 ## Technical Stacks
 ### Dev
@@ -17,12 +17,6 @@ REST
 ### Ops
 #### API Documentation
 Swagger
-
-#### Continuous Integration
-<a href="https://travis-ci.org/TblMaker/TableMaker-Backend">Travis-CI</a>
-
-#### Test Coverage Management
-<a href="https://coveralls.io/github/TblMaker/TableMaker-Backend?branch=develop">Coveralls</a>
 
 #### Continuous Delivery(Deployment Automation)
 TODO
