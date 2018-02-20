@@ -19,6 +19,10 @@ class RestaurantModel(Document):
     )
     # Fast food, Korean food, Japanese food, ...
 
+    tel = StringField(
+        required=True
+    )
+
     thumbnail_image_name = StringField(
         required=True
     )
