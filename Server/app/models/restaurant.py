@@ -6,10 +6,6 @@ class RestaurantModel(Document):
         'collection': 'restaurant'
     }
 
-    id = SequenceField(
-        primary_key=True
-    )
-
     name = StringField(
         required=True
     )
