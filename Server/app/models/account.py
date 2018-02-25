@@ -14,6 +14,24 @@ class UnverifiedAccountModel(Document):
         required=True
     )
 
+    phone = StringField(
+        unique=True,
+        required=True
+    )
+
+    name = StringField(
+        required=True
+    )
+
+    birthday = DateTimeField(
+        required=True
+    )
+
+    sex = StringField(
+        required=True
+    )
+
+    certify_url = StringField(
         required=True
     )
 
