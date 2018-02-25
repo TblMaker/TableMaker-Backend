@@ -37,6 +37,8 @@ class UnverifiedAccountModel(Document):
 
 
 class AccountModel(Document):
+    # TODO 장바구니에 대한 고려 필요
+    
     meta = {
         'collection': 'account'
     }
