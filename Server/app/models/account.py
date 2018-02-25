@@ -14,7 +14,6 @@ class UnverifiedAccountModel(Document):
         required=True
     )
 
-    verify_url = StringField(
         required=True
     )
 
