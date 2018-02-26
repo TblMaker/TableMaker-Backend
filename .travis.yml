@@ -1,16 +1,27 @@
+os: linux
 language: python
-cache: pip
 
-python:
-  - "3.4"
-  - "3.5"
-  - "3.6"
+matrix:
+  include:
+    - python: "3.4"
+    - python: "3.5"
+    - python: "3.5-dev"
+    - python: "3.6"
+    - python: "3.6-dev"
+    - python: "pypy3.5"
+  allow_failures:
+    - python: "nightly"
+  fast_finish: true
 
-services: mongodb
+services:
+  - mongodb
 
 install:
   - pip3 install -r requirements.txt
   - pip3 install coveralls
+
+cache:
+  - pip
 
 script:
   - coverage run --source=Server/app Server/run_test.py
@@ -18,3 +29,6 @@ script:
 after_success:
   - coverage report
   - coveralls
+
+notifications:
+  email: false
