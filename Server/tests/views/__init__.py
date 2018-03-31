@@ -14,17 +14,17 @@ class TCBase(TC):
         pass
 
     def _get_tokens(self):
-        pass
-
-    def setUp(self):
         self.access_token = None
         self.refresh_token = None
 
+    def setUp(self):
+        self._create_fake_account()
+        self._get_tokens()
+
     def tearDown(self):
         pass
-        # TODO Account delete
 
-    def json_request(self, method, target_url_rule, data, token=None):
+    def json_request(self, method, target_url_rule, data=None, token=None, *args, **kwargs):
         """
         Helper for json request
 
@@ -37,7 +37,7 @@ class TCBase(TC):
         :param data: JSON payload for request body
         :type data: dict or list
 
-        :param token: JWT access token
+        :param token: JWT or OAuth's access token with prefix(Bearer, JWT, ...). if token is None, use self.access_token
         :type token: str
 
         :return: response
@@ -47,7 +47,24 @@ class TCBase(TC):
 
         return method(
             target_url_rule,
-            data=ujson.dumps(data),
+            data=ujson.dumps(data if data else {}),
             content_type='application/json',
-            headers={'Authorization': token}
+            headers={'Authorization': token},
+            *args,
+            **kwargs
         )
+
+    def request(self, method, target_url_rule, data=None, token=None, *args, **kwargs):
+        if token is None:
+            token = self.access_token
+
+        return method(
+            target_url_rule,
+            data=data,
+            headers={'Authorization': token},
+            *args,
+            **kwargs
+        )
+
+    def get_response_data(self, resp):
+        return ujson.loads(resp.data.decode())
