@@ -4,8 +4,8 @@ TEMPLATE = {
     ],
     'tags': [
         {
-            'name': 'Some Tag',
-            'description': 'Some API'
+            'name': '식당 정보',
+            'description': '식당 정보 조회 관련 API'
         },
     ]
 }
