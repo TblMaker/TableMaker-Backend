@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from flask import Blueprint, Response, abort, request
+from flask import Blueprint, Response, abort, current_app, request
 from flask_jwt_extended import get_jwt_identity
 from flask_restful import Api
 from flasgger import swag_from
@@ -42,7 +42,7 @@ class RestaurantList(BaseResource):
 
         return time_gap_sec // 60
 
-    def _get_restaurant_objects(self, sector, reservation_count, reservation_time_str, time_gap_min):
+    def _get_restaurant_objects(self, sector, reservation_count, time_gap_min):
         """
         요청 데이터에 맞춰 쿼리된 식당 리스트를 불러옵니다.
 
@@ -52,8 +52,6 @@ class RestaurantList(BaseResource):
 
             reservation_count (int): 예약 인원 수
 
-            reservation_time_str (str): 예약 시간(%H:%M)
-
             time_gap_min (int): 예약 시간까지의 분 단위 gap
 
         Returns:
@@ -61,19 +59,15 @@ class RestaurantList(BaseResource):
         """
         return RestaurantModel.objects(
             # price_level=price_level,
-            min_reservation_count__gte=reservation_count,
-            max_reservation_count__lte=reservation_count,
-            open_time__gte=reservation_time_str,
-            close_time__lte=reservation_time_str,
-            reservation_gap_minutes__gte=time_gap_min
+            min_reservation_count__lte=reservation_count,
+            max_reservation_count__gte=reservation_count,
+            reservation_gap_minutes__lte=time_gap_min
         ) if sector == 'all' else RestaurantModel.objects(
             sector=sector,
             # price_level=price_level,
-            min_reservation_count__gte=reservation_count,
-            max_reservation_count__lte=reservation_count,
-            open_time__gte=reservation_time_str,
-            close_time__lte=reservation_time_str,
-            reservation_gap_minutes__gte=time_gap_min
+            min_reservation_count__lte=reservation_count,
+            max_reservation_count__gte=reservation_count,
+            reservation_gap_minutes__lte=time_gap_min
         )
 
     def _get_sorted_restaurant_list(self, restaurants, sort_type, latitude, longitude):
@@ -107,7 +101,7 @@ class RestaurantList(BaseResource):
                 for date in dates:
                     date_str = str(date)[:10]
 
-                    restaurant['reservation_count_sum'] += restaurant['reservation_count'].get(date_str, 0)
+                    restaurant['reservation_count_sum'] += restaurant['reservation_count_record'].get(date_str, 0)
 
             restaurants_list.sort(key=lambda obj: obj['reservation_count_sum'], reverse=True)
         elif sort_type == 2:
@@ -116,8 +110,8 @@ class RestaurantList(BaseResource):
                 key=lambda obj: get_distance_between_two_points(
                     latitude,
                     longitude,
-                    obj.latitude,
-                    obj.longitude
+                    obj['latitude'],
+                    obj['longitude']
                 )
             )
         elif sort_type == 3:
@@ -131,20 +125,21 @@ class RestaurantList(BaseResource):
             restaurants_list.sort(key=lambda obj: obj['rating'], reverse=True)
 
         return [{
-            'title': restaurant['name'],
+            'name': restaurant['name'],
             'rating': restaurant['rating'],
             'distance': get_distance_between_two_points(
                 latitude,
                 longitude,
                 restaurant['latitude'],
                 restaurant['longitude']
-            )
+            ),
+            'thumbnail': restaurant['thumbnail_image_name']
         } for restaurant in restaurants_list]
 
     @swag_from(RESTAURANT_LIST_GET)
     def get(self, sector):
         """
-        식당 목록 조회
+        음식점 목록 조회
         """
         reservation_count = int(request.args.get('reservationCount', 1))
         reservation_time_str = request.args.get('reservationTime', '12:00')
@@ -157,11 +152,37 @@ class RestaurantList(BaseResource):
             abort(400)
 
         time_gap_min = self._get_time_gap(reservation_time_str)
-        restaurants = self._get_restaurant_objects(sector, reservation_time_str, reservation_count, time_gap_min)
+        restaurants = self._get_restaurant_objects(sector, reservation_count, time_gap_min)
 
         return self.unicode_safe_json_dumps(
             self._get_sorted_restaurant_list(restaurants, sort_type, latitude, longitude)
         ) if time_gap_min >= 0 else Response('', 204)
+
+    @json_required('name', 'tel', 'priceAvg',
+                   'latitude', 'longitude', 'address',
+                   'openTime', 'closeTime', 'closeDays',
+                   'minReservationCount', 'maxReservationCount', 'reservationGapMinutes')
+    def post(self, sector):
+        """
+        새로운 음식점 추가
+        """
+        RestaurantModel(
+            name=request.json['name'],
+            sector=sector,
+            tel=request.json['tel'],
+            price_avg=request.json['priceAvg'],
+            latitude=request.json['latitude'],
+            longitude=request.json['longitude'],
+            address=request.json['address'],
+            open_time=request.json['openTime'],
+            close_time=request.json['closeTime'],
+            close_days=request.json['closeDays'],
+            min_reservation_count=request.json['minReservationCount'],
+            max_reservation_count=request.json['maxReservationCount'],
+            reservation_gap_minutes=request.json['reservationGapMinutes']
+        ).save()
+
+        return Response('', 201)
 
 
 @api.resource('/restaurant/map')
