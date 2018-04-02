@@ -23,13 +23,11 @@ class RestaurantModel(Document):
         regex='\d+-\d+-\d+'
     )
 
-    thumbnail_image_name = StringField(
-        required=True
-    )
+    thumbnail_image_name = StringField()
 
-    price_level = IntField(
-        required=True
-    )
+    # price_level = IntField(
+    #     required=True
+    # )
 
     price_avg = IntField(
         required=True
@@ -38,7 +36,8 @@ class RestaurantModel(Document):
     rating = FloatField(
         required=True,
         min_value=0.0,
-        max_value=5.0
+        max_value=5.0,
+        default=0.0
     )
 
     # --- 주소 관련 ---
@@ -83,9 +82,7 @@ class RestaurantModel(Document):
         required=True
     )
 
-    reservation_count = DictField(
-        required=True
-    )
+    reservation_count_record = DictField()
 
 
 class MenuModel(Document):
