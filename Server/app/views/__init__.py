@@ -100,5 +100,5 @@ class Router(object):
         """
         app.after_request(after_request)
 
-        from app.views import sample
-        app.register_blueprint(sample.api.blueprint)
+        from app.views.restaurant.restaurant import api
+        app.register_blueprint(api.blueprint)
