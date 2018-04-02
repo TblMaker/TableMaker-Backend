@@ -60,6 +60,7 @@ class TCBase(TC):
 
         return method(
             target_url_rule,
+            query_string=data,
             data=data,
             headers={'Authorization': token},
             *args,
