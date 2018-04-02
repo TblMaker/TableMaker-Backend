@@ -8,91 +8,83 @@ class RestaurantModel(Document):
         'collection': 'restaurant'
     }
 
-    class BasicInfo(EmbeddedDocument):
-        name = StringField(
-            required=True
-        )
-
-        sector = StringField(
-            required=True
-        )
-        # Fast food, Korean food, Japanese food, ...
-
-        tel = StringField(
-            required=True,
-            regex='\d+-\d+-\d+'
-        )
-
-        thumbnail_image_name = StringField(
-            required=True
-        )
-
-        price_range = StringField(
-            required=True,
-            regex='\d+~\d+'
-        )
-        # 가격대
-
-        rating = FloatField(
-            required=True,
-            min_value=0.0,
-            max_value=5.0
-        )
-
-    basic_info = EmbeddedDocumentField(
-        document_type=BasicInfo
+    # --- 기본 데이터 ---
+    name = StringField(
+        required=True
     )
 
-    class AddressInfo(EmbeddedDocument):
-        latitude = FloatField(
-            required=True
-        )
-        longitude = FloatField(
-            required=True
-        )
-        # 위도, 경도
+    sector = StringField(
+        required=True
+    )
+    # korean, chinese, ...
 
-        address = StringField(
-            required=True
-        )
-        # 주소(human readable)
-
-    address = EmbeddedDocumentField(
-        document_type=AddressInfo
+    tel = StringField(
+        required=True,
+        regex='\d+-\d+-\d+'
     )
 
-    class WorkingTimeInfo(EmbeddedDocument):
-        open_time = DateTimeField(
-            required=True
-        )
-        close_time = DateTimeField(
-            required=True
-        )
-        # 영업시간(hh:mm:ss)
-
-        close_days = ListField(
-            required=True
-        )
-        # 휴무일(일요일 0, 월요일 1, ..., 토요일 6)
-
-    working_time = EmbeddedDocumentField(
-        document_type=WorkingTimeInfo
+    thumbnail_image_name = StringField(
+        required=True
     )
 
-    class ReservationInfo(EmbeddedDocument):
-        min_reservation_count = IntField(
-            required=True
-        )
-        max_reservation_count = IntField(
-            required=True
-        )
+    price_level = IntField(
+        required=True
+    )
 
-        reservation_gap_minutes = IntField(
-            required=True
-        )
+    price_avg = IntField(
+        required=True
+    )
 
-    reservation = EmbeddedDocumentField(
-        document_type=ReservationInfo
+    rating = FloatField(
+        required=True,
+        min_value=0.0,
+        max_value=5.0
+    )
+
+    # --- 주소 관련 ---
+    latitude = FloatField(
+        required=True
+    )
+    longitude = FloatField(
+        required=True
+    )
+    # 위도, 경도
+
+    address = StringField(
+        required=True
+    )
+    # 주소(human readable)
+
+    # --- Working time 관련 ---
+    open_time = StringField(
+        required=True,
+        regex='\d\d:\d\d'
+    )
+    close_time = StringField(
+        required=True,
+        regex='\d\d:\d\d'
+    )
+    # 영업시간(hh:mm)
+
+    close_days = ListField(
+        required=True
+    )
+    # 휴무일(일요일 0, 월요일 1, ..., 토요일 6)
+
+    # --- 예약 관련 ---
+    min_reservation_count = IntField(
+        required=True
+    )
+    max_reservation_count = IntField(
+        required=True
+    )
+
+    reservation_gap_minutes = IntField(
+        required=True
+    )
+
+    reservation_count = DictField(
+        required=True
     )
 
 
