@@ -8,7 +8,6 @@ from app.docs.restaurant.restaurant import *
 from app.models.restaurant import RestaurantModel
 from app.views import BaseResource, json_required
 
-from app.models.support.mongo_helper import mongo_to_dict
 from utils.gps_operation_helper import get_distance_between_two_points
 
 api = Api(Blueprint('restaurant-api', __name__))
@@ -186,7 +185,7 @@ class RestaurantList(BaseResource):
 class RestaurantMap(BaseResource):
     def get(self):
         """
-        내 주변 식당 목록 조회
+        내 주변 음식점 목록 조회
         """
 
 
@@ -194,18 +193,5 @@ class RestaurantMap(BaseResource):
 class Restaurant(BaseResource):
     def get(self, restaurant_id):
         """
-        식당 정보 조회
-        """
-
-
-@api.resource('/cart')
-class Cart(BaseResource):
-    def get(self):
-        """
-        장바구니 목록 조회
-        """
-
-    def post(self):
-        """
-        장바구니에 메뉴 등록
+        음식점 세부 정보 조회
         """
