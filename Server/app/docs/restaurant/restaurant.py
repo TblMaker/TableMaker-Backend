@@ -64,12 +64,33 @@ RESTAURANT_LIST_GET = {
         }
     ],
     'responses': {
-        '201': {
-            'description': '',
+        '200': {
+            'description': '목록 조회 성공',
             'examples': {
-                '': {
-                }
+                '': [
+                    {
+                        'name': '맛있고 비싼 식땅',
+                        'rating': 4.0,
+                        'distance': 1.0766231543,
+                        'thumbnail': None
+                    },
+                    {
+                        'name': '맛있고 싼 식땅',
+                        'rating': 3.8,
+                        'distance': 1.0767234142,
+                        'thumbnail': None
+                    },
+                    {
+                        'name': '맛있는 식땅',
+                        'rating': 4.2,
+                        'distance': 1.0768236836,
+                        'thumbnail': '1e3b75c9eea13.png'
+                    }
+                ]
             }
+        },
+        '204': {
+            'description': '목록 조회 실패(예약 시간이 현재보다 과거)'
         }
     }
 }
