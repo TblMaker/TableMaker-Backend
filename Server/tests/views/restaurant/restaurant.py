@@ -84,32 +84,9 @@ class TestRestaurantList(TCBase):
         super(TestRestaurantList, self).tearDown()
 
     def test(self):
-        """
-        - Test
-        Load korean restaurant list with sort type 1
-
-        Load chinese restaurant list with sort type 2
-
-        Load chinese restaurant list with sort type 3
-
-        Load chinese restaurant list with sort type 4
-
-        - Exception Test
-        Load chinese restaurant list with past reservationTime
-            * Validation
-            (1) status code : 204
-
-        Load chinese restaurant list with reservationCount 999
-            * Validation
-            (1) status code : 200
-            (2) response data type : list
-            (3) length of resource : 0
-
-        Load chinese restaurant list with sortType 99
-            * Validation
-            (1) status code : 400
-        """
         # -- Test --
+
+        # 데이터베이스에는 없는 한국 식당 조회
         resp = self.request(self.client.get, '/restaurant/korean', {
             'reservationCount': 2,
             'reservationTime': self.valid_reservation_time,
@@ -129,12 +106,13 @@ class TestRestaurantList(TCBase):
 
         # ---
 
+        # 중식당을 sort type 2로 조회(가까운 거리 ~ 먼 거리)
         resp = self.request(self.client.get, '/restaurant/chinese', {
             'reservationCount': 2,
             'reservationTime': self.valid_reservation_time,
             'sortType': 2,
             'latitude': self.latitude,
-            'longitude': self.longitude
+            'longitude': self.longitude,
         })
 
         # (1)
@@ -147,25 +125,15 @@ class TestRestaurantList(TCBase):
         # (3)
         self.assertEqual(len(data), 3)
 
-        # (4)
-        self.assertEqual(data[0]['name'], '맛있고 비싼 식땅')
-        self.assertEqual(data[2]['name'], '맛있는 식땅')
-
-        restaurant = data[0]
-        self.assertIsInstance(restaurant, dict)
-
-        self.assertIn('thumbnail', restaurant)
-        self.assertIsNone(restaurant['thumbnail'])
-        del restaurant['thumbnail']
-
-        self.assertDictEqual(restaurant, {
-            'name': '맛있고 비싼 식땅',
-            'rating': 0.0,
-            'distance': 1.0766231543
-        })
+        # (4) 거리 측정
+        current_restaurant_distance = 0
+        for restaurant in data:
+            self.assertLessEqual(current_restaurant_distance, restaurant['distance'])
+            current_restaurant_distance = restaurant['distance']
 
         # ---
 
+        # 중식당을 sort type 3으로 조회(낮은 가격 ~ 높은 가격)
         resp = self.request(self.client.get, '/restaurant/chinese', {
             'reservationCount': 2,
             'reservationTime': self.valid_reservation_time,
@@ -184,25 +152,13 @@ class TestRestaurantList(TCBase):
         # (3)
         self.assertEqual(len(data), 3)
 
-        # (4)
+        # (4) 가격 측정(목록 API에선 price avg를 반환하지 않으므로 음식점 이름으로 테스트)
         self.assertEqual(data[0]['name'], '맛있고 싼 식땅')
         self.assertEqual(data[2]['name'], '맛있고 비싼 식땅')
 
-        restaurant = data[0]
-        self.assertIsInstance(restaurant, dict)
-
-        self.assertIn('thumbnail', restaurant)
-        self.assertIsNone(restaurant['thumbnail'])
-        del restaurant['thumbnail']
-
-        self.assertDictEqual(restaurant, {
-            'name': '맛있고 싼 식땅',
-            'rating': 0.0,
-            'distance': 1.0767234142
-        })
-
         # ---
 
+        # 중식당을 sort type 4로 조회(높은 가격 ~ 낮은 가격)
         resp = self.request(self.client.get, '/restaurant/chinese', {
             'reservationCount': 2,
             'reservationTime': self.valid_reservation_time,
@@ -221,29 +177,39 @@ class TestRestaurantList(TCBase):
         # (3)
         self.assertEqual(len(data), 3)
 
-        # (4)
+        # (4) 가격 측정(목록 API에선 price avg를 반환하지 않으므로 음식점 이름으로 테스트)
         self.assertEqual(data[0]['name'], '맛있고 비싼 식땅')
         self.assertEqual(data[2]['name'], '맛있고 싼 식땅')
 
-        restaurant = data[0]
-        self.assertIsInstance(restaurant, dict)
+        # ---
 
-        self.assertIn('thumbnail', restaurant)
-        self.assertIsNone(restaurant['thumbnail'])
-        del restaurant['thumbnail']
-
-        self.assertDictEqual(restaurant, {
-            'name': '맛있고 비싼 식땅',
-            'rating': 0.0,
-            'distance': 1.0766231543
+        # 중식당을 sort type 5와 page 2로 조회(Pagination이 제대로 되었는지 검사)
+        resp = self.request(self.client.get, '/restaurant/chinese', {
+            'reservationCount': 2,
+            'reservationTime': self.valid_reservation_time,
+            'sortType': 5,
+            'page': 2,
+            'latitude': self.latitude,
+            'longitude': self.longitude
         })
+
+        # (1)
+        self.assertEqual(resp.status_code, 200)
+
+        # (2)
+        data = self.get_response_data(resp)
+        self.assertIsInstance(data, list)
+
+        # (3) 2페이지에는 음식점이 없어야 함
+        self.assertEqual(len(data), 0)
         # -- Test --
 
         # -- Exception Test --
+
+        # 예약 시간이 과거
         resp = self.request(self.client.get, '/restaurant/chinese', {
             'reservationCount': 2,
             'reservationTime': self.past_reservation_time,
-            'sortType': 4,
             'latitude': self.latitude,
             'longitude': self.longitude
         })
@@ -253,10 +219,10 @@ class TestRestaurantList(TCBase):
 
         # ---
 
+        # 맞는 식당이 없는 예약 인원
         resp = self.request(self.client.get, '/restaurant/chinese', {
             'reservationCount': 999,
             'reservationTime': self.valid_reservation_time,
-            'sortType': 4,
             'latitude': self.latitude,
             'longitude': self.longitude
         })
@@ -270,17 +236,4 @@ class TestRestaurantList(TCBase):
 
         # (3)
         self.assertEqual(len(data), 0)
-
-        # ---
-
-        resp = self.request(self.client.get, '/restaurant/chinese', {
-            'reservationCount': 2,
-            'reservationTime': self.valid_reservation_time,
-            'sortType': 99,
-            'latitude': self.latitude,
-            'longitude': self.longitude
-        })
-
-        # (1)
-        self.assertEqual(resp.status_code, 400)
         # -- Exception Test --
