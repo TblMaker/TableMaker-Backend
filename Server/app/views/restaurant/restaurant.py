@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
-from flask import Blueprint, Response, abort, current_app, request
-from flask_jwt_extended import get_jwt_identity
+from flask import Blueprint, Response, abort, request
 from flask_restful import Api
 from flasgger import swag_from
 
@@ -18,9 +17,6 @@ api = Api(Blueprint('restaurant-api', __name__))
 @api.resource('/restaurant/<sector>')
 class RestaurantList(BaseResource):
     def __init__(self):
-        # self.PRICE_LEVEL = 1, 2, 3
-        self.SORT_TYPE = 1, 2, 3, 4, 5
-
         super(RestaurantList, self).__init__()
 
     def _get_time_gap(self, reservation_time_str):
@@ -86,7 +82,19 @@ class RestaurantList(BaseResource):
         Returns:
             list: 바로 response payload로 사용할 수 있도록 가공된 식당 리스트
         """
-        restaurants_list = [mongo_to_dict(restaurant) for restaurant in restaurants]
+        restaurants_list = [{
+            'name': restaurant.name,
+            'price_avg': restaurant.price_avg,
+            'rating': restaurant.rating,
+            'distance': get_distance_between_two_points(
+                latitude,
+                longitude,
+                restaurant.latitude,
+                restaurant.longitude
+            ),
+            'reservation_count_record': restaurant.reservation_count_record,
+            'thumbnail': restaurant.thumbnail_image_name
+        } for restaurant in restaurants]
 
         if sort_type == 1:
             # 예약 인기 높은 순
@@ -106,14 +114,7 @@ class RestaurantList(BaseResource):
             restaurants_list.sort(key=lambda obj: obj['reservation_count_sum'], reverse=True)
         elif sort_type == 2:
             # 가까운 거리 ~ 먼 거리
-            restaurants_list.sort(
-                key=lambda obj: get_distance_between_two_points(
-                    latitude,
-                    longitude,
-                    obj['latitude'],
-                    obj['longitude']
-                )
-            )
+            restaurants_list.sort(key=lambda obj: obj['distance'])
         elif sort_type == 3:
             # 낮은 가격 ~ 높은 가격
             restaurants_list.sort(key=lambda obj: obj['price_avg'])
@@ -121,19 +122,14 @@ class RestaurantList(BaseResource):
             # 높은 가격 ~ 낮은 가격
             restaurants_list.sort(key=lambda obj: obj['price_avg'], reverse=True)
         else:
-            # 평점 높은 순
+            # 높은 평점 ~ 낮은 평점
             restaurants_list.sort(key=lambda obj: obj['rating'], reverse=True)
 
         return [{
             'name': restaurant['name'],
             'rating': restaurant['rating'],
-            'distance': get_distance_between_two_points(
-                latitude,
-                longitude,
-                restaurant['latitude'],
-                restaurant['longitude']
-            ),
-            'thumbnail': restaurant['thumbnail_image_name']
+            'distance': restaurant['distance'],
+            'thumbnail': restaurant['thumbnail']
         } for restaurant in restaurants_list]
 
     @swag_from(RESTAURANT_LIST_GET)
@@ -141,23 +137,24 @@ class RestaurantList(BaseResource):
         """
         음식점 목록 조회
         """
-        reservation_count = int(request.args.get('reservationCount', 1))
+        reservation_count = request.args.get('reservationCount', 1, int)
         reservation_time_str = request.args.get('reservationTime', '12:00')
         # HH:MM
-        sort_type = int(request.args.get('sortType', 1))
+
         latitude = float(request.args['latitude'])
         longitude = float(request.args['longitude'])
 
-        if sort_type not in self.SORT_TYPE:
-            abort(400)
+        sort_type = request.args.get('sortType', 1, int)
+        page = request.args.get('page', 1, int)
 
         time_gap_min = self._get_time_gap(reservation_time_str)
         restaurants = self._get_restaurant_objects(sector, reservation_count, time_gap_min)
 
         return self.unicode_safe_json_dumps(
-            self._get_sorted_restaurant_list(restaurants, sort_type, latitude, longitude)
+            self._get_sorted_restaurant_list(restaurants, sort_type, latitude, longitude)[5 * (page - 1):5 * page + 1]
         ) if time_gap_min >= 0 else Response('', 204)
 
+    @swag_from(RESTAURANT_LIST_POST)
     @json_required('name', 'tel', 'priceAvg',
                    'latitude', 'longitude', 'address',
                    'openTime', 'closeTime', 'closeDays',
